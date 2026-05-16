@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Admin Portal - Global Metrics</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-error": "#ffffff",
+                    "inverse-surface": "#2d3133",
+                    "surface-tint": "#4c56af",
+                    "error": "#ba1a1a",
+                    "outline-variant": "#c6c5d4",
+                    "background": "#f7f9fb",
+                    "outline": "#767683",
+                    "surface-container-high": "#e6e8ea",
+                    "secondary-container": "#d5e3fc",
+                    "on-secondary-container": "#57657a",
+                    "on-surface-variant": "#454652",
+                    "on-error-container": "#93000a",
+                    "primary": "#000666",
+                    "primary-container": "#1a237e",
+                    "surface-bright": "#f7f9fb",
+                    "on-primary": "#ffffff",
+                    "tertiary-fixed-dim": "#bec6e0",
+                    "primary-fixed-dim": "#bdc2ff",
+                    "on-secondary-fixed": "#0d1c2e",
+                    "tertiary-fixed": "#dae2fd",
+                    "on-tertiary-container": "#8f97af",
+                    "on-tertiary-fixed": "#131b2e",
+                    "on-tertiary": "#ffffff",
+                    "on-secondary": "#ffffff",
+                    "surface-container-low": "#f2f4f6",
+                    "surface": "#f7f9fb",
+                    "primary-fixed": "#e0e0ff",
+                    "inverse-on-surface": "#eff1f3",
+                    "secondary-fixed-dim": "#b9c7df",
+                    "on-secondary-fixed-variant": "#3a485b",
+                    "surface-container": "#eceef0",
+                    "on-surface": "#191c1e",
+                    "on-tertiary-fixed-variant": "#3f465c",
+                    "error-container": "#ffdad6",
+                    "surface-variant": "#e0e3e5",
+                    "secondary-fixed": "#d5e3fc",
+                    "on-background": "#191c1e",
+                    "surface-container-highest": "#e0e3e5",
+                    "on-primary-container": "#8690ee",
+                    "on-primary-fixed-variant": "#343d96",
+                    "inverse-primary": "#bdc2ff",
+                    "secondary": "#515f74",
+                    "tertiary": "#121a2e",
+                    "surface-dim": "#d8dadc",
+                    "on-primary-fixed": "#000767",
+                    "surface-container-lowest": "#ffffff",
+                    "tertiary-container": "#272f43"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "xs": "0.25rem",
+                    "md": "1rem",
+                    "base": "4px",
+                    "sm": "0.5rem",
+                    "gutter": "1.5rem",
+                    "max-content-width": "1440px",
+                    "sidebar-width": "280px",
+                    "xl": "2rem",
+                    "lg": "1.5rem"
+            },
+            "fontFamily": {
+                    "body-md": [
+                            "Inter"
+                    ],
+                    "h3": [
+                            "Inter"
+                    ],
+                    "body-lg": [
+                            "Inter"
+                    ],
+                    "label-md": [
+                            "Inter"
+                    ],
+                    "h2": [
+                            "Inter"
+                    ],
+                    "button": [
+                            "Inter"
+                    ],
+                    "h1": [
+                            "Inter"
+                    ]
+            },
+            "fontSize": {
+                    "body-md": [
+                            "14px",
+                            {
+                                    "lineHeight": "1.5",
+                                    "letterSpacing": "0",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "h3": [
+                            "20px",
+                            {
+                                    "lineHeight": "1.4",
+                                    "letterSpacing": "0",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "body-lg": [
+                            "16px",
+                            {
+                                    "lineHeight": "1.6",
+                                    "letterSpacing": "0",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "label-md": [
+                            "12px",
+                            {
+                                    "lineHeight": "1",
+                                    "letterSpacing": "0.05em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "h2": [
+                            "24px",
+                            {
+                                    "lineHeight": "1.3",
+                                    "letterSpacing": "-0.01em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "button": [
+                            "14px",
+                            {
+                                    "lineHeight": "1",
+                                    "letterSpacing": "0.01em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "h1": [
+                            "32px",
+                            {
+                                    "lineHeight": "1.2",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "700"
+                            }
+                    ]
+            }
+    },
+        },
+      }
+    </script>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex">
+<!-- SideNavBar -->
+<aside class="flex flex-col h-screen fixed left-0 top-0 z-40 w-[280px] p-4 bg-white dark:bg-slate-900 font-inter antialiased tracking-tight border-r border-slate-200 dark:border-slate-800 shadow-none">
+<div class="flex items-center gap-4 mb-8 p-2">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined">domain</span>
+</div>
+<div>
+<h1 class="text-xl font-bold text-slate-900 dark:text-white">Admin Portal</h1>
+<p class="text-xs text-slate-500">Enterprise SaaS</p>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg transition-all duration-200 active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined">handshake</span>
+<span class="font-body-md text-body-md">Partners</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 bg-indigo-50 dark:bg-indigo-900/20 text-[#1A237E] dark:text-indigo-300 font-semibold rounded-lg transition-all duration-200 active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">analytics</span>
+<span class="font-body-md text-body-md">Global Metrics</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg transition-all duration-200 active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-body-md text-body-md">Employees</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg transition-all duration-200 active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined">poll</span>
+<span class="font-body-md text-body-md">Surveys</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg transition-all duration-200 active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined">school</span>
+<span class="font-body-md text-body-md">Training</span>
+</a>
+</nav>
+<div class="mt-auto pt-4 border-t border-slate-200">
+<div class="flex items-center gap-3 px-4 py-2">
+<img alt="User Profile" class="w-8 h-8 rounded-full" data-alt="professional headshot of a man in a modern office environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAk38dpzWaPB4PaLyHcumxMCY9z3SSxEkdg91hkCNQ4ty515z3ghELZ3xibtir40k0_RUnJP5-OEj_iYnhXGozg5_kxaydIFWbQU8ygI6psXmkiv2QHTYsI8MYvHZ5G39dHvAqh8Y2bkfAUBEA3w0dNtf8rUxYUTMbU5mMCWburrMUrRz37F7geUeBRV9g3qZ6n_jMeSIkVLXfkA6_2K03oSqojhunDODsHu5aKyutncuyjeeuolylTbPHrLADJxIujwczkAtAE9I8"/>
+<div>
+<p class="font-label-md text-label-md text-on-surface">Admin User</p>
+<p class="text-xs text-outline">admin@tenant.com</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 ml-[280px] flex flex-col min-h-screen">
+<!-- TopNavBar -->
+<header class="flex items-center justify-between px-8 h-16 w-full bg-white/90 backdrop-blur-md dark:bg-slate-900/90 font-inter text-sm font-medium border-b border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-none z-30 sticky top-0">
+<div class="flex-1">
+<!-- Search Bar -->
+<div class="relative max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline-variant">search</span>
+<input class="w-full bg-surface-container-low border border-slate-200 rounded-lg pl-10 pr-4 py-2 focus:ring-2 focus:ring-primary-container focus:border-primary-container outline-none transition-all text-on-surface placeholder:text-outline-variant font-body-md text-body-md" placeholder="Search sub-accounts..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-slate-500 dark:text-slate-400 hover:text-indigo-700 dark:hover:text-indigo-300 cursor-pointer p-2 rounded-full hover:bg-slate-50 transition-all focus:ring-2 focus:ring-indigo-500">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-slate-500 dark:text-slate-400 hover:text-indigo-700 dark:hover:text-indigo-300 cursor-pointer p-2 rounded-full hover:bg-slate-50 transition-all focus:ring-2 focus:ring-indigo-500">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+</header>
+<!-- Dashboard Content -->
+<div class="p-gutter max-w-max-content-width w-full mx-auto space-y-6">
+<div class="flex items-center justify-between">
+<h2 class="font-h2 text-h2 text-on-surface">Global Metrics Overview</h2>
+<button class="bg-primary-container text-on-primary font-button text-button px-6 py-3 rounded-lg hover:bg-primary transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">download</span>
+                    Export Report
+                </button>
+</div>
+<!-- Metrics Bento Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Active Partners Card -->
+<div class="bg-surface-container-lowest border border-slate-200 rounded-xl p-6 shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-h3 text-h3 text-on-surface-variant">Active Partners</h3>
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined">handshake</span>
+</div>
+</div>
+<div>
+<p class="font-h1 text-h1 text-on-surface">1,248</p>
+<p class="font-body-md text-body-md text-surface-tint flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-[16px]">arrow_upward</span>
+                            12% from last month
+                        </p>
+</div>
+</div>
+<!-- Total Revenue Card -->
+<div class="bg-primary-container border border-primary-container rounded-xl p-6 shadow-sm flex flex-col justify-between relative overflow-hidden">
+<!-- Decorative subtle gradient bg -->
+<div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
+<div class="flex items-center justify-between mb-4 relative z-10">
+<h3 class="font-h3 text-h3 text-on-primary">Total Revenue</h3>
+<div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined">payments</span>
+</div>
+</div>
+<div class="relative z-10">
+<p class="font-h1 text-h1 text-on-primary">$4.2M</p>
+<p class="font-body-md text-body-md text-primary-fixed-dim flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-[16px]">arrow_upward</span>
+                            8.5% YoY Growth
+                        </p>
+</div>
+</div>
+<!-- System Health Card -->
+<div class="bg-surface-container-lowest border border-slate-200 rounded-xl p-6 shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-h3 text-h3 text-on-surface-variant">System Health</h3>
+<div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined">dns</span>
+</div>
+</div>
+<div>
+<p class="font-h1 text-h1 text-on-surface">99.9%</p>
+<p class="font-body-md text-body-md text-outline flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-[16px]">check_circle</span>
+                            All systems operational
+                        </p>
+</div>
+</div>
+</div>
+<!-- Recent Activity Table Section -->
+<div class="bg-surface-container-lowest border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+<div class="p-6 border-b border-slate-200 flex items-center justify-between">
+<h3 class="font-h3 text-h3 text-on-surface">Recent Partner Activity</h3>
+<button class="text-primary-container font-button text-button hover:underline">View All</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant font-label-md text-label-md uppercase tracking-wider">
+<th class="px-6 py-4 font-medium">Partner Name</th>
+<th class="px-6 py-4 font-medium">Region</th>
+<th class="px-6 py-4 font-medium">Last Sync</th>
+<th class="px-6 py-4 font-medium">Status</th>
+<th class="px-6 py-4 font-medium text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-200">
+<tr class="hover:bg-slate-50 transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-secondary-container flex items-center justify-center text-on-secondary-container font-bold text-xs">AC</div>
+<div>
+<p class="font-body-lg text-body-lg text-on-surface font-medium">Acme Corp</p>
+<p class="font-body-md text-body-md text-outline text-xs">Enterprise Tier</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 font-body-md text-body-md text-on-surface-variant">North America</td>
+<td class="px-6 py-4 font-body-md text-body-md text-on-surface-variant">10 mins ago</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary-container text-on-secondary-container">
+                                        Active
+                                    </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-outline hover:text-primary-container transition-colors">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-slate-50 transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-surface-variant flex items-center justify-center text-on-surface-variant font-bold text-xs">GL</div>
+<div>
+<p class="font-body-lg text-body-lg text-on-surface font-medium">Global Logistics</p>
+<p class="font-body-md text-body-md text-outline text-xs">Professional Tier</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 font-body-md text-body-md text-on-surface-variant">Europe</td>
+<td class="px-6 py-4 font-body-md text-body-md text-on-surface-variant">2 hours ago</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-surface-variant text-on-surface-variant">
+                                        Inactive
+                                    </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-outline hover:text-primary-container transition-colors">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-slate-50 transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-secondary-container flex items-center justify-center text-on-secondary-container font-bold text-xs">TN</div>
+<div>
+<p class="font-body-lg text-body-lg text-on-surface font-medium">TechNova</p>
+<p class="font-body-md text-body-md text-outline text-xs">Startup Tier</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 font-body-md text-body-md text-on-surface-variant">Asia Pacific</td>
+<td class="px-6 py-4 font-body-md text-body-md text-on-surface-variant">1 day ago</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary-container text-on-secondary-container">
+                                        Active
+                                    </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-outline hover:text-primary-container transition-colors">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</main>
+</body></html>
