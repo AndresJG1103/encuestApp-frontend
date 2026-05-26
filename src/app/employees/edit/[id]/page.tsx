@@ -4,9 +4,11 @@ import React, { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Sidebar } from '../../../../components/Sidebar';
 import { getUserById, updateUser } from '../../../../services/userService';
+import { useNotification } from '../../../../context/NotificationContext';
 
 export default function EditEmployeePage() {
   const router = useRouter();
+  const { notify } = useNotification();
   const params = useParams();
   const userId = params.id as string;
 
@@ -55,9 +57,11 @@ export default function EditEmployeePage() {
 
     try {
       await updateUser(userId, formData);
+      notify('Empleado actualizado con éxito', 'success');
       router.push('/employees');
     } catch (err: any) {
       setError(err.message || 'Error al actualizar el empleado');
+      notify(err.message || 'Error al actualizar el empleado', 'error');
     } finally {
       setSaving(false);
     }
@@ -84,7 +88,7 @@ export default function EditEmployeePage() {
       <main style={{ flex: 1, marginLeft: '280px', display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         {/* Top Header */}
         <header style={{ 
-          height: '72px', backgroundColor: 'white', borderBottom: '1px solid var(--color-outline-variant)',
+          height: '72px', backgroundColor: 'var(--color-surface)', borderBottom: '1px solid var(--color-outline-variant)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 32px',
           position: 'sticky', top: 0, zIndex: 10
         }}>
@@ -102,8 +106,8 @@ export default function EditEmployeePage() {
         {/* Content */}
         <div style={{ padding: '32px', display: 'flex', justifyContent: 'center' }}>
           <div style={{ 
-            width: '100%', maxWidth: '600px', backgroundColor: 'white', borderRadius: '16px',
-            border: '1px solid var(--color-outline-variant)', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+            width: '100%', maxWidth: '600px', backgroundColor: 'var(--color-surface-container-lowest)', borderRadius: '16px',
+            border: '1px solid var(--color-outline-variant)', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
           }}>
             <div style={{ padding: '32px' }}>
               <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '8px', color: 'var(--color-on-surface)' }}>Información del Usuario</h2>
@@ -126,14 +130,14 @@ export default function EditEmployeePage() {
                     <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-on-surface-variant)' }}>Nombre</label>
                     <input 
                       type="text" name="firstName" required value={formData.firstName} onChange={handleChange}
-                      style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--color-outline)', outline: 'none' }}
+                      style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--color-outline)', outline: 'none', backgroundColor: 'var(--color-surface)', color: 'var(--color-on-surface)' }}
                     />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-on-surface-variant)' }}>Apellidos</label>
                     <input 
                       type="text" name="lastName" required value={formData.lastName} onChange={handleChange}
-                      style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--color-outline)', outline: 'none' }}
+                      style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--color-outline)', outline: 'none', backgroundColor: 'var(--color-surface)', color: 'var(--color-on-surface)' }}
                     />
                   </div>
                 </div>
@@ -142,7 +146,7 @@ export default function EditEmployeePage() {
                   <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-on-surface-variant)' }}>Documento de Identidad</label>
                   <input 
                     type="text" name="identityDocument" required value={formData.identityDocument} onChange={handleChange}
-                    style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--color-outline)', outline: 'none' }}
+                    style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--color-outline)', outline: 'none', backgroundColor: 'var(--color-surface)', color: 'var(--color-on-surface)' }}
                   />
                 </div>
 
@@ -162,7 +166,7 @@ export default function EditEmployeePage() {
                     onClick={() => router.back()}
                     style={{ 
                       flex: 1, padding: '14px', borderRadius: '12px', border: '1px solid var(--color-outline)',
-                      backgroundColor: 'white', color: 'var(--color-on-surface)', fontWeight: 600, cursor: 'pointer'
+                      backgroundColor: 'var(--color-surface-container-low)', color: 'var(--color-on-surface)', fontWeight: 600, cursor: 'pointer'
                     }}
                   >
                     Cancelar
@@ -172,7 +176,7 @@ export default function EditEmployeePage() {
                     disabled={saving}
                     style={{ 
                       flex: 1, padding: '14px', borderRadius: '12px', border: 'none',
-                      backgroundColor: 'var(--color-primary)', color: 'white', fontWeight: 600, 
+                      backgroundColor: 'var(--color-primary)', color: 'var(--color-on-primary)', fontWeight: 600, 
                       cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1,
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
                     }}

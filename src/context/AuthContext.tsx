@@ -26,9 +26,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const initAuth = async () => {
       const token = getAccessToken();
       if (token) {
-        setIsAuthenticated(true);
-        // Ideally fetch user profile here if an endpoint exists, 
-        // For now we just set authenticated to true.
+        try {
+          // Basic JWT decoding
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          setUser(payload);
+          setIsAuthenticated(true);
+        } catch (e) {
+          console.error('Invalid token');
+          clearTokens();
+        }
       } else {
         setIsAuthenticated(false);
       }

@@ -3,25 +3,22 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Sidebar } from '../../../components/Sidebar';
-import { createUser } from '../../../services/userService';
+import { createForm } from '../../../services/formService';
 import { useNotification } from '../../../context/NotificationContext';
 
-export default function NewEmployeePage() {
+export default function NewFormPage() {
   const router = useRouter();
   const { notify } = useNotification();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    identityDocument: '',
-    password: '',
-    role: 'RESPONDENT'
+    title: '',
+    description: '',
+    type: 'SURVEY',
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
@@ -34,16 +31,13 @@ export default function NewEmployeePage() {
     setError(null);
 
     try {
-      const { role, ...submitData } = formData;
-      await createUser({
-        ...submitData,
-        roles: [role] 
-      });
-      notify('Empleado creado correctamente', 'success');
-      router.push('/employees');
+      const newForm = await createForm(formData);
+      notify('Formulario base creado', 'success');
+      // After creating the base form, redirect to the full editor (Stage 4)
+      router.push(`/forms/${newForm.id}/edit`);
     } catch (err: any) {
-      setError(err.message || 'Error al crear el empleado');
-      notify(err.message || 'Error al crear el empleado', 'error');
+      setError(err.message || 'Error al crear el formulario');
+      notify(err.message || 'Error al crear el formulario', 'error');
     } finally {
       setLoading(false);
     }
@@ -54,7 +48,6 @@ export default function NewEmployeePage() {
       <Sidebar />
 
       <main style={{ flex: 1, marginLeft: '280px', display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-        {/* Top Header */}
         <header style={{ 
           height: '72px', backgroundColor: 'var(--color-surface)', borderBottom: '1px solid var(--color-outline-variant)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 32px',
@@ -67,19 +60,18 @@ export default function NewEmployeePage() {
             >
               <span className="material-symbols-outlined">arrow_back</span>
             </button>
-            <h1 style={{ fontSize: '20px', fontWeight: 700, margin: 0, color: 'var(--color-on-surface)' }}>Nuevo Empleado</h1>
+            <h1 style={{ fontSize: '20px', fontWeight: 700, margin: 0, color: 'var(--color-on-surface)' }}>Nuevo Formulario</h1>
           </div>
         </header>
 
-        {/* Content */}
         <div style={{ padding: '32px', display: 'flex', justifyContent: 'center' }}>
           <div style={{ 
             width: '100%', maxWidth: '600px', backgroundColor: 'var(--color-surface-container-lowest)', borderRadius: '16px',
             border: '1px solid var(--color-outline-variant)', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
           }}>
             <div style={{ padding: '32px' }}>
-              <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '8px', color: 'var(--color-on-surface)' }}>Información Personal</h2>
-              <p style={{ color: 'var(--color-outline)', marginBottom: '32px' }}>Completa los datos para dar de alta a un nuevo colaborador.</p>
+              <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '8px', color: 'var(--color-on-surface)' }}>Configuración Inicial</h2>
+              <p style={{ color: 'var(--color-outline)', marginBottom: '32px' }}>Define los detalles básicos de tu nueva encuesta o capacitación.</p>
 
               {error && (
                 <div style={{ 
@@ -93,62 +85,33 @@ export default function NewEmployeePage() {
               )}
 
               <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-on-surface-variant)' }}>Nombre</label>
-                    <input 
-                      type="text" name="firstName" required value={formData.firstName} onChange={handleChange}
-                      placeholder="Ej. Juan"
-                      style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--color-outline)', outline: 'none', backgroundColor: 'var(--color-surface)', color: 'var(--color-on-surface)' }}
-                    />
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-on-surface-variant)' }}>Apellidos</label>
-                    <input 
-                      type="text" name="lastName" required value={formData.lastName} onChange={handleChange}
-                      placeholder="Ej. Pérez García"
-                      style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--color-outline)', outline: 'none', backgroundColor: 'var(--color-surface)', color: 'var(--color-on-surface)' }}
-                    />
-                  </div>
-                </div>
-
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-on-surface-variant)' }}>Correo Electrónico</label>
+                  <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-on-surface-variant)' }}>Título</label>
                   <input 
-                    type="email" name="email" required value={formData.email} onChange={handleChange}
-                    placeholder="juan.perez@empresa.com"
+                    type="text" name="title" required value={formData.title} onChange={handleChange}
+                    placeholder="Ej. Encuesta de Clima Laboral 2026"
                     style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--color-outline)', outline: 'none', backgroundColor: 'var(--color-surface)', color: 'var(--color-on-surface)' }}
                   />
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-on-surface-variant)' }}>Documento de Identidad</label>
-                  <input 
-                    type="text" name="identityDocument" required value={formData.identityDocument} onChange={handleChange}
-                    placeholder="DNI, NIE o Pasaporte"
-                    style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--color-outline)', outline: 'none', backgroundColor: 'var(--color-surface)', color: 'var(--color-on-surface)' }}
+                  <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-on-surface-variant)' }}>Descripción (Opcional)</label>
+                  <textarea 
+                    name="description" value={formData.description} onChange={handleChange}
+                    placeholder="Describe brevemente el objetivo de este formulario..."
+                    rows={4}
+                    style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--color-outline)', outline: 'none', resize: 'vertical', backgroundColor: 'var(--color-surface)', color: 'var(--color-on-surface)' }}
                   />
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-on-surface-variant)' }}>Contraseña Temporal</label>
-                  <input 
-                    type="password" name="password" required value={formData.password} onChange={handleChange}
-                    placeholder="Mínimo 8 caracteres"
-                    style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--color-outline)', outline: 'none', backgroundColor: 'var(--color-surface)', color: 'var(--color-on-surface)' }}
-                  />
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-on-surface-variant)' }}>Rol en la Plataforma</label>
+                  <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-on-surface-variant)' }}>Tipo de Formulario</label>
                   <select 
-                    name="role" value={formData.role} onChange={handleChange}
+                    name="type" value={formData.type} onChange={handleChange}
                     style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--color-outline)', outline: 'none', backgroundColor: 'var(--color-surface)', color: 'var(--color-on-surface)' }}
                   >
-                    <option value="RESPONDENT">Empleado (Encuestado)</option>
-                    <option value="CREATOR">Creador (Encuestas/Formación)</option>
-                    <option value="REVIEWER">Revisor (Analista)</option>
-                    <option value="TENANT_ADMIN">Administrador de Organización</option>
+                    <option value="SURVEY">Encuesta (Sin puntuación)</option>
+                    <option value="TRAINING">Capacitación (Con puntuación y certificado)</option>
                   </select>
                 </div>
 
@@ -176,9 +139,9 @@ export default function NewEmployeePage() {
                     {loading ? (
                       <>
                         <span className="material-symbols-outlined" style={{ animation: 'spin 1s linear infinite' }}>sync</span>
-                        Guardando...
+                        Creando...
                       </>
-                    ) : 'Crear Empleado'}
+                    ) : 'Continuar al Editor'}
                   </button>
                 </div>
               </form>

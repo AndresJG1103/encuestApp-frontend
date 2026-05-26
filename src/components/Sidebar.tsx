@@ -4,17 +4,25 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
+import { ThemeToggle } from './ThemeToggle';
 
 export const Sidebar = () => {
   const pathname = usePathname();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+
+  const userRoles = user?.roles || [];
+  const isAdmin = userRoles.includes('TENANT_ADMIN') || userRoles.includes('SUPER_ADMIN');
+  const isCreator = userRoles.includes('CREATOR');
+  const isRespondent = userRoles.includes('RESPONDENT');
 
   const navItems = [
-    { name: 'Dashboard', icon: 'dashboard', href: '/' },
-    { name: 'Employees', icon: 'group', href: '/employees' },
-    { name: 'Forms', icon: 'description', href: '/forms' },
-    { name: 'Analytics', icon: 'analytics', href: '/analytics' },
-    { name: 'Settings', icon: 'settings', href: '/settings' },
+    { name: 'Inicio', icon: 'dashboard', href: '/', show: true },
+    { name: 'Mis Tareas', icon: 'task', href: '/my-tasks', show: isRespondent },
+    { name: 'Certificados', icon: 'verified', href: '/certificates', show: isRespondent },
+    { name: 'Empleados', icon: 'group', href: '/employees', show: isAdmin },
+    { name: 'Formularios', icon: 'description', href: '/forms', show: isAdmin || isCreator },
+    { name: 'Analíticas', icon: 'analytics', href: '/analytics', show: isAdmin || isCreator },
+    { name: 'Configuración', icon: 'settings', href: '/settings', show: isAdmin },
   ];
 
   return (
@@ -41,13 +49,13 @@ export const Sidebar = () => {
           <span className="material-symbols-outlined">domain</span>
         </div>
         <div>
-          <h1 style={{ fontSize: '20px', fontWeight: 700, margin: 0, color: 'var(--color-on-surface)' }}>Admin Portal</h1>
-          <p style={{ fontSize: '12px', margin: 0, color: 'var(--color-outline)' }}>Enterprise SaaS</p>
+          <h1 style={{ fontSize: '20px', fontWeight: 700, margin: 0, color: 'var(--color-on-surface)' }}>LearnPulse</h1>
+          <p style={{ fontSize: '12px', margin: 0, color: 'var(--color-outline)' }}>SaaS Empresarial</p>
         </div>
       </div>
 
       <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-        {navItems.map((item) => {
+        {navItems.filter(i => i.show).map((item) => {
           const isActive = pathname === item.href;
           return (
             <Link key={item.name} href={item.href} style={{ textDecoration: 'none' }}>
@@ -73,21 +81,28 @@ export const Sidebar = () => {
       <div style={{ marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid var(--color-outline-variant)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ width: '32px', height: '32px', borderRadius: '9999px', backgroundColor: 'var(--color-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold' }}>
-              A
+            <div style={{ width: '32px', height: '32px', borderRadius: '9999px', backgroundColor: 'var(--color-primary)', color: 'var(--color-on-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold' }}>
+              {user?.email?.charAt(0).toUpperCase() || 'U'}
             </div>
             <div>
-              <p style={{ margin: 0, fontSize: '12px', fontWeight: 600, letterSpacing: '0.05em', color: 'var(--color-on-surface)' }}>Admin User</p>
-              <p style={{ margin: 0, fontSize: '12px', color: 'var(--color-outline)' }}>admin@tenant.com</p>
+              <p style={{ margin: 0, fontSize: '12px', fontWeight: 600, letterSpacing: '0.05em', color: 'var(--color-on-surface)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '120px' }}>
+                {user?.email?.split('@')[0] || 'User'}
+              </p>
+              <p style={{ margin: 0, fontSize: '10px', color: 'var(--color-outline)' }}>
+                {isAdmin ? 'Admin' : isCreator ? 'Creador' : 'Respondiente'}
+              </p>
             </div>
           </div>
-          <button 
-            onClick={logout}
-            title="Cerrar sesión"
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-error)', display: 'flex', alignItems: 'center' }}
-          >
-            <span className="material-symbols-outlined">logout</span>
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <ThemeToggle />
+            <button 
+              onClick={logout}
+              title="Cerrar sesión"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-error)', display: 'flex', alignItems: 'center', padding: '8px', borderRadius: '8px', backgroundColor: 'var(--color-surface-container-low)' }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>logout</span>
+            </button>
+          </div>
         </div>
       </div>
     </aside>

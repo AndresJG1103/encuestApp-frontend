@@ -4,9 +4,11 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Sidebar } from '../../components/Sidebar';
 import { getUsers, User, PaginatedResult, toggleUserStatus } from '../../services/userService';
+import { useNotification } from '../../context/NotificationContext';
 
 export default function EmployeesPage() {
   const router = useRouter();
+  const { notify, confirm } = useNotification();
   const [data, setData] = useState<PaginatedResult<User> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,11 +38,14 @@ export default function EmployeesPage() {
   };
 
   const handleToggleStatus = async (id: string) => {
+    const ok = await confirm('¿Estás seguro de que quieres cambiar el estado de este usuario?');
+    if (!ok) return;
     try {
       await toggleUserStatus(id);
+      notify('Estado del usuario actualizado', 'success');
       fetchUsers(); // Refresh the list
     } catch (err: any) {
-      alert(err.message || 'Error al cambiar el estado del usuario');
+      notify(err.message || 'Error al cambiar el estado del usuario', 'error');
     }
   };
 
@@ -51,8 +56,8 @@ export default function EmployeesPage() {
       <main style={{ flex: 1, marginLeft: '280px', display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         <header style={{ 
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
-          padding: '0 32px', height: '64px', backgroundColor: 'rgba(255, 255, 255, 0.9)', 
-          backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--color-outline-variant)',
+          padding: '0 32px', height: '64px', backgroundColor: 'var(--color-surface)', 
+          opacity: 0.98, backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--color-outline-variant)',
           position: 'sticky', top: 0, zIndex: 30
         }}>
           <h2 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--color-on-surface)' }}>Gestión de Empleados</h2>
@@ -78,7 +83,7 @@ export default function EmployeesPage() {
             <button 
               onClick={() => router.push('/employees/new')}
               style={{ 
-                backgroundColor: 'var(--color-primary)', color: 'white',
+                backgroundColor: 'var(--color-primary)', color: 'var(--color-on-primary)',
                 padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: 600,
                 border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px'
               }}
@@ -159,8 +164,8 @@ export default function EmployeesPage() {
                         <span style={{ 
                           display: 'inline-flex', alignItems: 'center', gap: '6px',
                           padding: '4px 12px', borderRadius: '9999px', fontSize: '12px', fontWeight: 600,
-                          backgroundColor: user.isActive ? '#ecfdf5' : '#fef2f2',
-                          color: user.isActive ? '#059669' : '#dc2626'
+                          backgroundColor: user.isActive ? 'var(--color-secondary-container)' : 'var(--color-error-container)',
+                          color: user.isActive ? 'var(--color-on-secondary-container)' : 'var(--color-on-error-container)'
                         }}>
                           <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'currentColor' }}></span>
                           {user.isActive ? 'Activo' : 'Inactivo'}
@@ -178,7 +183,7 @@ export default function EmployeesPage() {
                           title={user.isActive ? 'Deshabilitar' : 'Habilitar'}
                           style={{ 
                             background: 'none', border: 'none', cursor: 'pointer', 
-                            color: user.isActive ? 'var(--color-warning)' : 'var(--color-primary)', 
+                            color: user.isActive ? 'var(--color-error)' : 'var(--color-primary)', 
                             padding: '4px' 
                           }}
                         >
@@ -193,7 +198,6 @@ export default function EmployeesPage() {
               </tbody>
             </table>
             
-            {/* Pagination */}
             {/* Pagination */}
             {data && data.meta.lastPage > 1 && (
               <div style={{ 
@@ -213,7 +217,7 @@ export default function EmployeesPage() {
                     onClick={() => setPage(1)}
                     style={{ 
                       padding: '8px', borderRadius: '8px', border: '1px solid var(--color-outline-variant)',
-                      backgroundColor: 'white', cursor: page === 1 ? 'not-allowed' : 'pointer',
+                      backgroundColor: 'var(--color-surface)', color: 'var(--color-on-surface)', cursor: page === 1 ? 'not-allowed' : 'pointer',
                       opacity: page === 1 ? 0.5 : 1, display: 'flex', alignItems: 'center'
                     }}
                   >
@@ -224,14 +228,13 @@ export default function EmployeesPage() {
                     onClick={() => setPage(p => p - 1)}
                     style={{ 
                       padding: '8px', borderRadius: '8px', border: '1px solid var(--color-outline-variant)',
-                      backgroundColor: 'white', cursor: page === 1 ? 'not-allowed' : 'pointer',
+                      backgroundColor: 'var(--color-surface)', color: 'var(--color-on-surface)', cursor: page === 1 ? 'not-allowed' : 'pointer',
                       opacity: page === 1 ? 0.5 : 1, display: 'flex', alignItems: 'center'
                     }}
                   >
                     <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>chevron_left</span>
                   </button>
                   
-                  {/* Page Numbers */}
                   {Array.from({ length: Math.min(5, data.meta.lastPage) }, (_, i) => {
                     let pageNum;
                     if (data.meta.lastPage <= 5) {
@@ -252,8 +255,8 @@ export default function EmployeesPage() {
                         style={{ 
                           minWidth: '40px', height: '40px', borderRadius: '8px', 
                           border: isCurrent ? 'none' : '1px solid var(--color-outline-variant)',
-                          backgroundColor: isCurrent ? 'var(--color-primary)' : 'white',
-                          color: isCurrent ? 'white' : 'var(--color-on-surface)',
+                          backgroundColor: isCurrent ? 'var(--color-primary)' : 'var(--color-surface)',
+                          color: isCurrent ? 'var(--color-on-primary)' : 'var(--color-on-surface)',
                           cursor: 'pointer', fontWeight: isCurrent ? 600 : 400,
                           fontSize: '14px'
                         }}
@@ -268,7 +271,7 @@ export default function EmployeesPage() {
                     onClick={() => setPage(p => p + 1)}
                     style={{ 
                       padding: '8px', borderRadius: '8px', border: '1px solid var(--color-outline-variant)',
-                      backgroundColor: 'white', cursor: page === data.meta.lastPage ? 'not-allowed' : 'pointer',
+                      backgroundColor: 'var(--color-surface)', color: 'var(--color-on-surface)', cursor: page === data.meta.lastPage ? 'not-allowed' : 'pointer',
                       opacity: page === data.meta.lastPage ? 0.5 : 1, display: 'flex', alignItems: 'center'
                     }}
                   >
@@ -279,7 +282,7 @@ export default function EmployeesPage() {
                     onClick={() => setPage(data.meta.lastPage)}
                     style={{ 
                       padding: '8px', borderRadius: '8px', border: '1px solid var(--color-outline-variant)',
-                      backgroundColor: 'white', cursor: page === data.meta.lastPage ? 'not-allowed' : 'pointer',
+                      backgroundColor: 'var(--color-surface)', color: 'var(--color-on-surface)', cursor: page === data.meta.lastPage ? 'not-allowed' : 'pointer',
                       opacity: page === data.meta.lastPage ? 0.5 : 1, display: 'flex', alignItems: 'center'
                     }}
                   >

@@ -32,16 +32,16 @@ export default function Home() {
       {/* Main Content */}
       <main style={{ flex: 1, marginLeft: '280px', display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         {/* Top Header */}
-        <header style={{ 
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
-          padding: '0 32px', height: '64px', backgroundColor: 'rgba(255, 255, 255, 0.9)', 
-          backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--color-outline-variant)',
+        <header style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '0 32px', height: '64px', backgroundColor: 'var(--color-surface)',
+          opacity: 0.98, backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--color-outline-variant)',
           position: 'sticky', top: 0, zIndex: 30
         }}>
           <div style={{ flex: 1 }}>
             <div style={{ position: 'relative', maxWidth: '448px' }}>
               <span className="material-symbols-outlined" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-outline-variant)' }}>search</span>
-              <input type="text" placeholder="Search sub-accounts..." style={{
+              <input type="text" placeholder="Buscar subcuentas..." style={{
                 width: '100%', backgroundColor: 'var(--color-surface-container-low)',
                 border: '1px solid var(--color-outline-variant)', borderRadius: '8px',
                 padding: '8px 16px 8px 40px', outline: 'none', color: 'var(--color-on-surface)',
@@ -61,22 +61,34 @@ export default function Home() {
 
         <div style={{ padding: '24px', maxWidth: '1440px', width: '100%', margin: '0 auto', boxSizing: 'border-box' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '24px', fontWeight: 600, margin: 0, color: 'var(--color-on-surface)' }}>Global Metrics Overview</h2>
-            <button style={{ 
+            <h2 style={{ fontSize: '24px', fontWeight: 600, margin: 0, color: 'var(--color-on-surface)' }}>Vista General de Métricas</h2>
+            <button style={{
               backgroundColor: 'var(--color-primary-container)', color: 'var(--color-on-primary)',
               padding: '12px 24px', borderRadius: '8px', fontSize: '14px', fontWeight: 600,
               border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px'
             }}>
               <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>download</span>
-              Export Report
+              Exportar Reporte
             </button>
           </div>
+
+          {error && (
+            <div style={{
+              backgroundColor: 'var(--color-error-container)', color: 'var(--color-on-error-container)',
+              padding: '16px', borderRadius: '8px', marginBottom: '24px', border: '1px solid var(--color-error)'
+            }}>
+              <p style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="material-symbols-outlined">error</span>
+                {error}
+              </p>
+            </div>
+          )}
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', marginBottom: '24px' }}>
             {/* Active Partners */}
             <div style={{ backgroundColor: 'var(--color-surface-container-lowest)', border: '1px solid var(--color-outline-variant)', borderRadius: '12px', padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-                <h3 style={{ fontSize: '20px', fontWeight: 600, margin: 0, color: 'var(--color-on-surface-variant)' }}>Active Partners</h3>
+                <h3 style={{ fontSize: '20px', fontWeight: 600, margin: 0, color: 'var(--color-on-surface-variant)' }}>Socios Activos</h3>
                 <div style={{ width: '40px', height: '40px', borderRadius: '9999px', backgroundColor: 'var(--color-secondary-container)', color: 'var(--color-on-secondary-container)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <span className="material-symbols-outlined">handshake</span>
                 </div>
@@ -86,7 +98,7 @@ export default function Home() {
                   {loading ? '...' : metrics?.activeEmployees || 0}
                 </p>
                 <p style={{ display: 'flex', alignItems: 'center', gap: '4px', margin: '4px 0 0', fontSize: '14px', color: 'var(--color-surface-tint)' }}>
-                  Active Employees
+                  Empleados Activos
                 </p>
               </div>
             </div>
@@ -95,7 +107,7 @@ export default function Home() {
             <div style={{ backgroundColor: 'var(--color-primary-container)', border: '1px solid var(--color-primary-container)', borderRadius: '12px', padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', position: 'relative', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', right: '-40px', top: '-40px', width: '160px', height: '160px', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '9999px', filter: 'blur(24px)' }}></div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', position: 'relative', zIndex: 10 }}>
-                <h3 style={{ fontSize: '20px', fontWeight: 600, margin: 0, color: 'var(--color-on-primary)' }}>Total Revenue</h3>
+                <h3 style={{ fontSize: '20px', fontWeight: 600, margin: 0, color: 'var(--color-on-primary)' }}>Ingresos Totales</h3>
                 <div style={{ width: '40px', height: '40px', borderRadius: '9999px', backgroundColor: 'rgba(255,255,255,0.2)', color: 'var(--color-on-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <span className="material-symbols-outlined">payments</span>
                 </div>
@@ -104,8 +116,8 @@ export default function Home() {
                 <p style={{ fontSize: '32px', fontWeight: 700, margin: 0, color: 'var(--color-on-primary)' }}>
                   {loading ? '...' : metrics?.totalRevenue || '$0'}
                 </p>
-                <p style={{ display: 'flex', alignItems: 'center', gap: '4px', margin: '4px 0 0', fontSize: '14px', color: 'var(--color-primary-fixed-dim)' }}>
-                  Current Revenue
+                <p style={{ display: 'flex', alignItems: 'center', gap: '4px', margin: '4px 0 0', fontSize: '14px', color: 'var(--color-on-primary)' }}>
+                  Ingresos Actuales
                 </p>
               </div>
             </div>
@@ -113,7 +125,7 @@ export default function Home() {
             {/* System Health */}
             <div style={{ backgroundColor: 'var(--color-surface-container-lowest)', border: '1px solid var(--color-outline-variant)', borderRadius: '12px', padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-                <h3 style={{ fontSize: '20px', fontWeight: 600, margin: 0, color: 'var(--color-on-surface-variant)' }}>System Health</h3>
+                <h3 style={{ fontSize: '20px', fontWeight: 600, margin: 0, color: 'var(--color-on-surface-variant)' }}>Salud del Sistema</h3>
                 <div style={{ width: '40px', height: '40px', borderRadius: '9999px', backgroundColor: 'var(--color-surface-variant)', color: 'var(--color-on-surface-variant)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <span className="material-symbols-outlined">dns</span>
                 </div>
@@ -122,28 +134,33 @@ export default function Home() {
                 <p style={{ fontSize: '32px', fontWeight: 700, margin: 0, color: 'var(--color-on-surface)' }}>
                   {loading ? '...' : metrics?.systemHealth || '0%'}
                 </p>
-                <p style={{ display: 'flex', alignItems: 'center', gap: '4px', margin: '4px 0 0', fontSize: '14px', color: 'var(--color-outline)' }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>check_circle</span>
-                  {metrics?.systemHealth === '99.9%' ? 'All systems operational' : 'Checking status...'}
+                <p style={{
+                  display: 'flex', alignItems: 'center', gap: '4px', margin: '4px 0 0', fontSize: '14px',
+                  color: metrics?.systemHealth === 'Degraded' ? 'var(--color-error)' : 'var(--color-outline)'
+                }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
+                    {metrics?.systemHealth === '100%' ? 'check_circle' : 'warning'}
+                  </span>
+                  {metrics?.systemHealth === '100%' ? 'Todos los sistemas operativos' : metrics?.systemHealth === 'Degraded' ? 'Problemas detectados' : 'Verificando estado...'}
                 </p>
               </div>
             </div>
           </div>
 
-          <div style={{ backgroundColor: 'var(--color-surface-container-lowest)', border: '1px solid var(--color-outline-variant)', borderRadius: '12px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+          <div style={{ backgroundColor: 'var(--color-surface-container-lowest)', border: '1px solid var(--color-outline-variant)', borderRadius: '12px', boxShadow: '0 1px 2px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
             <div style={{ padding: '24px', borderBottom: '1px solid var(--color-outline-variant)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <h3 style={{ fontSize: '20px', fontWeight: 600, margin: 0, color: 'var(--color-on-surface)' }}>Recent Partner Activity</h3>
-              <button style={{ background: 'none', border: 'none', color: 'var(--color-primary-container)', fontWeight: 600, fontSize: '14px', cursor: 'pointer' }}>View All</button>
+              <h3 style={{ fontSize: '20px', fontWeight: 600, margin: 0, color: 'var(--color-on-surface)' }}>Actividad Reciente</h3>
+              <button style={{ background: 'none', border: 'none', color: 'var(--color-primary-container)', fontWeight: 600, fontSize: '14px', cursor: 'pointer' }}>Ver Todo</button>
             </div>
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ backgroundColor: 'var(--color-surface-container-low)', color: 'var(--color-on-surface-variant)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    <th style={{ padding: '16px 24px' }}>Partner Name</th>
-                    <th style={{ padding: '16px 24px' }}>Region</th>
-                    <th style={{ padding: '16px 24px' }}>Last Sync</th>
-                    <th style={{ padding: '16px 24px' }}>Status</th>
-                    <th style={{ padding: '16px 24px', textAlign: 'right' }}>Actions</th>
+                    <th style={{ padding: '16px 24px' }}>Nombre del Usuario</th>
+                    <th style={{ padding: '16px 24px' }}>Formulario</th>
+                    <th style={{ padding: '16px 24px' }}>Última Sincronización</th>
+                    <th style={{ padding: '16px 24px' }}>Estado</th>
+                    <th style={{ padding: '16px 24px', textAlign: 'right' }}>Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -164,18 +181,18 @@ export default function Home() {
                       <tr key={activity.id} style={{ borderBottom: '1px solid var(--color-outline-variant)' }}>
                         <td style={{ padding: '16px 24px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <div style={{ 
-                              width: '32px', height: '32px', borderRadius: '4px', 
-                              backgroundColor: 'var(--color-secondary-container)', 
-                              color: 'var(--color-on-secondary-container)', 
-                              display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                              fontWeight: 'bold', fontSize: '12px' 
+                            <div style={{
+                              width: '32px', height: '32px', borderRadius: '4px',
+                              backgroundColor: 'var(--color-secondary-container)',
+                              color: 'var(--color-on-secondary-container)',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              fontWeight: 'bold', fontSize: '12px'
                             }}>
                               {activity.userName.charAt(0)}
                             </div>
                             <div>
                               <p style={{ margin: 0, fontWeight: 500, color: 'var(--color-on-surface)', fontSize: '16px' }}>{activity.userName}</p>
-                              <p style={{ margin: 0, fontSize: '12px', color: 'var(--color-outline)' }}>User</p>
+                              <p style={{ margin: 0, fontSize: '12px', color: 'var(--color-outline)' }}>Usuario</p>
                             </div>
                           </div>
                         </td>
@@ -186,13 +203,13 @@ export default function Home() {
                           {new Date(activity.startedAt).toLocaleString()}
                         </td>
                         <td style={{ padding: '16px 24px' }}>
-                          <span style={{ 
-                            display: 'inline-flex', padding: '2px 10px', borderRadius: '9999px', 
-                            fontSize: '12px', fontWeight: 500, 
-                            backgroundColor: activity.status === 'COMPLETED' ? 'var(--color-secondary-container)' : 'var(--color-surface-variant)', 
-                            color: activity.status === 'COMPLETED' ? 'var(--color-on-secondary-container)' : 'var(--color-on-surface-variant)' 
+                          <span style={{
+                            display: 'inline-flex', padding: '2px 10px', borderRadius: '9999px',
+                            fontSize: '12px', fontWeight: 500,
+                            backgroundColor: activity.status === 'COMPLETED' ? 'var(--color-secondary-container)' : 'var(--color-surface-variant)',
+                            color: activity.status === 'COMPLETED' ? 'var(--color-on-secondary-container)' : 'var(--color-on-surface-variant)'
                           }}>
-                            {activity.status}
+                            {activity.status === 'COMPLETED' ? 'COMPLETADO' : activity.status}
                           </span>
                         </td>
                         <td style={{ padding: '16px 24px', textAlign: 'right' }}>

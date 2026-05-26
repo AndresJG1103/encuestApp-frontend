@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
+import { useNotification } from '../../context/NotificationContext';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -11,6 +12,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
+  const { notify } = useNotification();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,23 +20,26 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       await login({ email, password, tenantSlug });
+      notify('Bienvenido de nuevo', 'success');
     } catch (err: any) {
-      setError(err.message || 'Error al iniciar sesión. Verifica tus datos.');
+      const msg = err.message || 'Error al iniciar sesión. Verifica tus datos.';
+      setError(msg);
+      notify(msg, 'error');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--color-surface-container-low)] p-4" style={{ width: '100vw', minHeight: '100vh' }}>
-      <div className="card shadow-lg bg-white" style={{ width: '100%', maxWidth: '448px', padding: '32px', borderRadius: '8px' }}>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--color-background)] p-4" style={{ width: '100vw', minHeight: '100vh' }}>
+      <div className="card shadow-lg bg-[var(--color-surface-container-lowest)]" style={{ width: '100%', maxWidth: '448px', padding: '32px', borderRadius: '16px' }}>
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-[var(--color-primary)]">Bienvenido</h1>
           <p className="text-[var(--color-on-surface-variant)] mt-2">Inicia sesión en tu cuenta</p>
         </div>
 
         {error && (
-          <div className="bg-[var(--color-error-container)] text-[var(--color-on-error-container)] p-3 rounded-md mb-4 text-sm">
+          <div className="bg-[var(--color-error-container)] text-[var(--color-on-error-container)] p-3 rounded-md mb-4 text-sm border border-[var(--color-error)]">
             {error}
           </div>
         )}
@@ -49,7 +54,7 @@ export default function LoginPage() {
               type="text"
               value={tenantSlug}
               onChange={(e) => setTenantSlug(e.target.value)}
-              className="border border-[var(--color-outline-variant)] rounded p-2 focus:outline-none focus:border-[var(--color-primary)] bg-white"
+              className="border border-[var(--color-outline-variant)] rounded p-2 focus:outline-none focus:border-[var(--color-primary)] bg-[var(--color-surface)] text-[var(--color-on-surface)]"
               required
               placeholder="Ej. mi-empresa"
             />
@@ -64,7 +69,7 @@ export default function LoginPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="border border-[var(--color-outline-variant)] rounded p-2 focus:outline-none focus:border-[var(--color-primary)] bg-white"
+              className="border border-[var(--color-outline-variant)] rounded p-2 focus:outline-none focus:border-[var(--color-primary)] bg-[var(--color-surface)] text-[var(--color-on-surface)]"
               required
               placeholder="tu@correo.com"
             />
@@ -79,7 +84,7 @@ export default function LoginPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="border border-[var(--color-outline-variant)] rounded p-2 focus:outline-none focus:border-[var(--color-primary)] bg-white"
+              className="border border-[var(--color-outline-variant)] rounded p-2 focus:outline-none focus:border-[var(--color-primary)] bg-[var(--color-surface)] text-[var(--color-on-surface)]"
               required
               placeholder="••••••••"
             />
