@@ -1,19 +1,15 @@
-import { apiFetch } from '../lib/api';
-import { PaginatedResult } from './userService';
+import { apiFetch, extractError } from '../lib/api';
+import type {
+  CreateFormInput,
+  Form,
+  FormFilters,
+  PaginatedResult,
+  UpdateFormInput,
+} from '../types';
 
-export interface Form {
-  id: string;
-  title: string;
-  description?: string;
-  type: 'SURVEY' | 'TRAINING';
-  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
-  version: number;
-  config: any;
-  createdAt: string;
-  updatedAt: string;
-}
+export type { Form } from '../types';
 
-export const getForms = async (params: { page?: number; limit?: number; type?: string; status?: string } = {}): Promise<PaginatedResult<Form>> => {
+export const getForms = async (params: FormFilters = {}): Promise<PaginatedResult<Form>> => {
   const queryParams = new URLSearchParams();
   if (params.page) queryParams.append('page', params.page.toString());
   if (params.limit) queryParams.append('limit', params.limit.toString());
@@ -22,21 +18,20 @@ export const getForms = async (params: { page?: number; limit?: number; type?: s
 
   const res = await apiFetch(`/forms?${queryParams.toString()}`);
   if (!res.ok) {
-    throw new Error('Error al obtener los formularios');
+    throw new Error(await extractError(res, 'Error al obtener los formularios'));
   }
   const data = await res.json();
   return data.data;
 };
 
-export const createForm = async (formData: any): Promise<Form> => {
+export const createForm = async (formData: CreateFormInput): Promise<Form> => {
   const res = await apiFetch('/forms', {
     method: 'POST',
     body: JSON.stringify(formData),
   });
 
   if (!res.ok) {
-    const errorData = await res.json();
-    throw new Error(errorData.message || 'Error al crear el formulario');
+    throw new Error(await extractError(res, 'Error al crear el formulario'));
   }
 
   const data = await res.json();
@@ -46,21 +41,20 @@ export const createForm = async (formData: any): Promise<Form> => {
 export const getFormById = async (id: string): Promise<Form> => {
   const res = await apiFetch(`/forms/${id}`);
   if (!res.ok) {
-    throw new Error('Error al obtener el formulario');
+    throw new Error(await extractError(res, 'Error al obtener el formulario'));
   }
   const data = await res.json();
   return data.data;
 };
 
-export const updateForm = async (id: string, formData: any): Promise<Form> => {
+export const updateForm = async (id: string, formData: UpdateFormInput): Promise<Form> => {
   const res = await apiFetch(`/forms/${id}`, {
     method: 'PATCH',
     body: JSON.stringify(formData),
   });
 
   if (!res.ok) {
-    const errorData = await res.json();
-    throw new Error(errorData.message || 'Error al actualizar el formulario');
+    throw new Error(await extractError(res, 'Error al actualizar el formulario'));
   }
 
   const data = await res.json();
@@ -73,8 +67,7 @@ export const publishForm = async (id: string): Promise<Form> => {
   });
 
   if (!res.ok) {
-    const errorData = await res.json();
-    throw new Error(errorData.message || 'Error al publicar el formulario');
+    throw new Error(await extractError(res, 'Error al publicar el formulario'));
   }
 
   const data = await res.json();
@@ -87,11 +80,20 @@ export const duplicateForm = async (id: string): Promise<Form> => {
   });
 
   if (!res.ok) {
-    throw new Error('Error al duplicar el formulario');
+    throw new Error(await extractError(res, 'Error al duplicar el formulario'));
   }
 
   const data = await res.json();
   return data.data;
+};
+
+export const archiveForm = async (id: string): Promise<void> => {
+  const res = await apiFetch(`/forms/${id}/archive`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) {
+    throw new Error(await extractError(res, 'Error al archivar el formulario'));
+  }
 };
 
 export const deleteForm = async (id: string): Promise<void> => {
@@ -100,6 +102,6 @@ export const deleteForm = async (id: string): Promise<void> => {
   });
 
   if (!res.ok) {
-    throw new Error('Error al eliminar el formulario');
+    throw new Error(await extractError(res, 'Error al eliminar el formulario'));
   }
 };

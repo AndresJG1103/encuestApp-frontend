@@ -226,7 +226,7 @@ export default function FormEditorPage() {
                                   defaultValue={item.content.questionType}
                                   onChange={(e) => {
                                     const newType = e.target.value;
-                                    let newContent = { ...item.content, questionType: newType };
+                                    const newContent: Record<string, any> = { ...item.content, questionType: newType };
                                     if (newType === 'BOOLEAN') {
                                       newContent.options = ['Verdadero', 'Falso'];
                                     }

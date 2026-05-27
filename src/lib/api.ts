@@ -1,5 +1,21 @@
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
+export const extractError = async (res: Response, fallback: string): Promise<string> => {
+  try {
+    const body = await res.json();
+    const err = body?.error;
+    if (typeof err === 'string') return err;
+    if (err && typeof err === 'object') {
+      if (Array.isArray(err.message)) return err.message.join(', ');
+      if (typeof err.message === 'string') return err.message;
+    }
+    if (typeof body?.message === 'string') return body.message;
+    return fallback;
+  } catch {
+    return fallback;
+  }
+};
+
 export const getAccessToken = () => {
   if (typeof window !== 'undefined') {
     return localStorage.getItem('accessToken');

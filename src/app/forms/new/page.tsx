@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Sidebar } from '../../../components/Sidebar';
 import { createForm } from '../../../services/formService';
+import type { FormType } from '../../../types';
 import { useNotification } from '../../../context/NotificationContext';
 
 export default function NewFormPage() {
@@ -12,7 +13,7 @@ export default function NewFormPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{ title: string; description: string; type: FormType }>({
     title: '',
     description: '',
     type: 'SURVEY',

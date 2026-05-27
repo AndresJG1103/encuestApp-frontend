@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Sidebar } from '../../../components/Sidebar';
 import { createUser } from '../../../services/userService';
+import type { RoleType } from '../../../types';
 import { useNotification } from '../../../context/NotificationContext';
 
 export default function NewEmployeePage() {
@@ -12,13 +13,20 @@ export default function NewEmployeePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    firstName: string;
+    lastName: string;
+    email: string;
+    identityDocument: string;
+    password: string;
+    role: RoleType;
+  }>({
     firstName: '',
     lastName: '',
     email: '',
     identityDocument: '',
     password: '',
-    role: 'RESPONDENT'
+    role: 'RESPONDENT',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
