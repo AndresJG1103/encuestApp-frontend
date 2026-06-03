@@ -1,122 +1,296 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Sidebar } from '../../../../components/Sidebar';
-import { getFormById, Form } from '../../../../services/formService';
-import { getUsers, User } from '../../../../services/userService';
-import { createAssignment } from '../../../../services/assignmentService';
+import { useAuth } from '../../../../context/AuthContext';
 import { useNotification } from '../../../../context/NotificationContext';
+import { Permissions } from '../../../../lib/permissions';
+import { useApi, useAsyncAction } from '../../../../hooks';
+import { getFormById } from '../../../../services/formService';
+import { getUsers } from '../../../../services/userService';
+import {
+  createAssignment,
+  getAssignments,
+  updateAssignment,
+} from '../../../../services/assignmentService';
+import type {
+  Assignment,
+  AssignmentStatus,
+  User,
+} from '../../../../types';
+import {
+  Badge,
+  Button,
+  Card,
+  EmptyState,
+  Icon,
+  Input,
+  PageLayout,
+  Select,
+  Spinner,
+  TBody,
+  TD,
+  TH,
+  THead,
+  TR,
+  Table,
+} from '../../../../components/ui';
+
+const STATUS_OPTIONS: AssignmentStatus[] = ['PENDING', 'IN_PROGRESS', 'COMPLETED', 'EXPIRED'];
+
+const statusTone = (s: AssignmentStatus): 'neutral' | 'warning' | 'success' | 'danger' => {
+  if (s === 'COMPLETED') return 'success';
+  if (s === 'IN_PROGRESS') return 'warning';
+  if (s === 'EXPIRED') return 'danger';
+  return 'neutral';
+};
 
 export default function AssignFormPage() {
   const router = useRouter();
-  const { notify } = useNotification();
   const params = useParams();
+  const { user } = useAuth();
+  const { notify, confirm } = useNotification();
   const formId = params.id as string;
 
-  const [form, setForm] = useState<Form | null>(null);
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [assigning, setAssigning] = useState(false);
-  const [selectedUser, setSelectedUser] = useState('');
+  const [selectedUserId, setSelectedUserId] = useState('');
   const [dueDate, setDueDate] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<{ dueDate: string; status: AssignmentStatus }>({
+    dueDate: '',
+    status: 'PENDING',
+  });
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [formData, usersData] = await Promise.all([
-          getFormById(formId),
-          getUsers({ limit: 100 })
-        ]);
-        setForm(formData);
-        setUsers(usersData.data);
-      } catch (err: any) {
-        notify(err.message, 'error');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [formId]);
+  const formQuery = useApi(() => getFormById(formId), [formId]);
+  const usersQuery = useApi(() => getUsers({ limit: 100 }), []);
+  const assignmentsQuery = useApi(() => getAssignments({ formId, limit: 100 }), [formId]);
 
-  const handleAssign = async (e: React.FormEvent) => {
+  const create = useAsyncAction(createAssignment, {
+    onSuccess: () => {
+      notify('Asignación creada', 'success');
+      setSelectedUserId('');
+      setDueDate('');
+      assignmentsQuery.refetch();
+    },
+    onError: (msg) => notify(msg, 'error'),
+  });
+
+  const update = useAsyncAction(
+    (input: { id: string; dueDate?: string; status?: AssignmentStatus }) =>
+      updateAssignment(input.id, { dueDate: input.dueDate, status: input.status }),
+    {
+      onSuccess: () => {
+        notify('Asignación actualizada', 'success');
+        setEditingId(null);
+        assignmentsQuery.refetch();
+      },
+      onError: (msg) => notify(msg, 'error'),
+    },
+  );
+
+  if (!Permissions.assignForms(user)) {
+    return (
+      <PageLayout title="Asignar">
+        <EmptyState icon="lock" title="Acceso denegado" />
+      </PageLayout>
+    );
+  }
+
+  const form = formQuery.data;
+  const users = usersQuery.data?.data ?? [];
+  const assignments = assignmentsQuery.data?.data ?? [];
+
+  const assignedUserIds = new Set(assignments.map((a) => a.userId));
+  const unassignedUsers = users.filter((u: User) => !assignedUserIds.has(u.id));
+
+  const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedUser) return;
-    setAssigning(true);
-    try {
-      await createAssignment({
-        formId,
-        userId: selectedUser,
-        dueDate: dueDate || undefined
-      });
-      notify('Formulario asignado correctamente', 'success');
-      router.push('/forms');
-    } catch (err: any) {
-      notify(err.message, 'error');
-    } finally {
-      setAssigning(false);
-    }
+    if (!selectedUserId) return;
+    await create.run({
+      formId,
+      userId: selectedUserId,
+      dueDate: dueDate || undefined,
+    });
   };
 
-  if (loading) return <div style={{ padding: '40px', textAlign: 'center', color: 'var(--color-outline)' }}>Cargando...</div>;
+  const startEdit = (a: Assignment) => {
+    setEditingId(a.id);
+    setEditForm({
+      dueDate: a.dueDate ? a.dueDate.slice(0, 10) : '',
+      status: a.status,
+    });
+  };
+
+  const saveEdit = async (id: string) => {
+    await update.run({
+      id,
+      dueDate: editForm.dueDate || undefined,
+      status: editForm.status,
+    });
+  };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', width: '100%', backgroundColor: 'var(--color-background)' }}>
-      <Sidebar />
-
-      <main style={{ flex: 1, marginLeft: '280px', display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-        <header style={{ 
-          height: '72px', backgroundColor: 'var(--color-surface)', borderBottom: '1px solid var(--color-outline-variant)',
-          display: 'flex', alignItems: 'center', padding: '0 32px'
-        }}>
-           <button 
-            onClick={() => router.back()} 
-            style={{ background: 'none', border: 'none', cursor: 'pointer', marginRight: '16px', color: 'var(--color-on-surface)', display: 'flex', alignItems: 'center' }}
-           >
-              <span className="material-symbols-outlined">arrow_back</span>
-            </button>
-            <h1 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--color-on-surface)', margin: 0 }}>Asignar Formulario: {form?.title}</h1>
-        </header>
-
-        <div style={{ padding: '32px', display: 'flex', justifyContent: 'center' }}>
-          <div style={{ width: '100%', maxWidth: '500px', backgroundColor: 'var(--color-surface-container-lowest)', padding: '32px', borderRadius: '16px', border: '1px solid var(--color-outline-variant)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
-            <form onSubmit={handleAssign} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-on-surface-variant)' }}>Seleccionar Usuario</label>
-                <select 
-                  required value={selectedUser} onChange={(e) => setSelectedUser(e.target.value)}
-                  style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--color-outline)', backgroundColor: 'var(--color-surface)', color: 'var(--color-on-surface)' }}
-                >
-                  <option value="">Seleccione un usuario...</option>
-                  {users.map(u => (
-                    <option key={u.id} value={u.id}>{u.firstName} {u.lastName} ({u.email})</option>
-                  ))}
-                </select>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-on-surface-variant)' }}>Fecha de Vencimiento (Opcional)</label>
-                <input 
-                  type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)}
-                  style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--color-outline)', backgroundColor: 'var(--color-surface)', color: 'var(--color-on-surface)' }}
-                />
-              </div>
-
-              <button 
-                type="submit" 
-                disabled={assigning}
-                style={{ 
-                  padding: '14px', borderRadius: '12px', border: 'none',
-                  backgroundColor: 'var(--color-primary)', color: 'var(--color-on-primary)', fontWeight: 600, 
-                  cursor: assigning ? 'not-allowed' : 'pointer', opacity: assigning ? 0.7 : 1
-                }}
+    <PageLayout
+      title={`Asignar: ${form?.title ?? '...'}`}
+      actions={
+        <Button variant="secondary" icon="arrow_back" onClick={() => router.push('/forms')}>
+          Volver
+        </Button>
+      }
+    >
+      <div className="max-w-4xl mx-auto flex flex-col gap-6">
+        {/* Crear nueva */}
+        <Card>
+          <h3 className="text-base font-semibold m-0 mb-4">Nueva asignación</h3>
+          <form onSubmit={handleCreate} className="flex flex-col md:flex-row gap-3 items-end">
+            <div className="flex-1 min-w-0">
+              <Select
+                label="Usuario"
+                required
+                value={selectedUserId}
+                onChange={(e) => setSelectedUserId(e.target.value)}
               >
-                {assigning ? 'Asignando...' : 'Confirmar Asignación'}
-              </button>
-            </form>
+                <option value="">Selecciona un usuario...</option>
+                {unassignedUsers.map((u: User) => (
+                  <option key={u.id} value={u.id}>
+                    {u.firstName} {u.lastName} ({u.email})
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <div className="w-full md:w-48">
+              <Input
+                type="date"
+                label="Vencimiento"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+              />
+            </div>
+            <Button type="submit" icon="add" loading={create.loading} disabled={!selectedUserId}>
+              Asignar
+            </Button>
+          </form>
+          {unassignedUsers.length === 0 && users.length > 0 && (
+            <p className="text-xs text-outline m-0 mt-3">
+              Todos los usuarios ya tienen este formulario asignado.
+            </p>
+          )}
+        </Card>
+
+        {/* Lista existentes */}
+        <Card padded={false}>
+          <div className="px-6 py-4 border-b border-outline-variant flex items-center justify-between">
+            <h3 className="text-base font-semibold m-0">
+              Asignaciones existentes ({assignments.length})
+            </h3>
           </div>
-        </div>
-      </main>
-    </div>
+
+          {assignmentsQuery.loading ? (
+            <Spinner label="Cargando..." />
+          ) : assignmentsQuery.error ? (
+            <EmptyState icon="error" title="Error" description={assignmentsQuery.error} />
+          ) : assignments.length === 0 ? (
+            <EmptyState
+              icon="assignment"
+              title="Sin asignaciones"
+              description="Aún no has asignado este formulario a nadie."
+            />
+          ) : (
+            <Table>
+              <THead>
+                <TR>
+                  <TH>Usuario</TH>
+                  <TH>Estado</TH>
+                  <TH>Vencimiento</TH>
+                  <TH>Asignado</TH>
+                  <TH className="text-right">Acciones</TH>
+                </TR>
+              </THead>
+              <TBody>
+                {assignments.map((a) => {
+                  const isEditing = editingId === a.id;
+                  return (
+                    <TR key={a.id}>
+                      <TD>
+                        <p className="font-semibold m-0">
+                          {a.user?.firstName} {a.user?.lastName}
+                        </p>
+                        <p className="text-xs text-outline m-0">{a.user?.email}</p>
+                      </TD>
+                      <TD>
+                        {isEditing ? (
+                          <select
+                            value={editForm.status}
+                            onChange={(e) =>
+                              setEditForm((f) => ({
+                                ...f,
+                                status: e.target.value as AssignmentStatus,
+                              }))
+                            }
+                            className="px-2 py-1 rounded border border-outline-variant bg-surface text-on-surface text-sm"
+                          >
+                            {STATUS_OPTIONS.map((s) => (
+                              <option key={s} value={s}>
+                                {s}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <Badge tone={statusTone(a.status)}>{a.status}</Badge>
+                        )}
+                      </TD>
+                      <TD>
+                        {isEditing ? (
+                          <input
+                            type="date"
+                            value={editForm.dueDate}
+                            onChange={(e) =>
+                              setEditForm((f) => ({ ...f, dueDate: e.target.value }))
+                            }
+                            className="px-2 py-1 rounded border border-outline-variant bg-surface text-on-surface text-sm"
+                          />
+                        ) : a.dueDate ? (
+                          new Date(a.dueDate).toLocaleDateString()
+                        ) : (
+                          <span className="text-outline">—</span>
+                        )}
+                      </TD>
+                      <TD className="text-on-surface-variant text-xs">
+                        {a.createdAt ? new Date(a.createdAt).toLocaleDateString() : '—'}
+                      </TD>
+                      <TD className="text-right">
+                        {isEditing ? (
+                          <div className="flex gap-1 justify-end">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              icon="close"
+                              onClick={() => setEditingId(null)}
+                            >
+                              Cancelar
+                            </Button>
+                            <Button
+                              size="sm"
+                              icon="check"
+                              loading={update.loading}
+                              onClick={() => saveEdit(a.id)}
+                            >
+                              Guardar
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button size="sm" variant="ghost" icon="edit" onClick={() => startEdit(a)}>
+                            Editar
+                          </Button>
+                        )}
+                      </TD>
+                    </TR>
+                  );
+                })}
+              </TBody>
+            </Table>
+          )}
+        </Card>
+      </div>
+    </PageLayout>
   );
 }

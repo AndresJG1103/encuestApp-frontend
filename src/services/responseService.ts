@@ -1,21 +1,13 @@
-import { apiFetch } from '../lib/api';
+import { apiFetch, extractError } from '../lib/api';
+import type {
+  AnswerPayload,
+  CompleteSessionResult,
+  PaginatedResult,
+  PaginationParams,
+  ResponseSession,
+} from '../types';
 
-export interface ResponseSession {
-  id: string;
-  formId: string;
-  userId: string;
-  attempt: number;
-  status: 'IN_PROGRESS' | 'COMPLETED' | 'ABANDONED';
-  score?: number;
-  passed?: boolean;
-  startedAt: string;
-  completedAt?: string;
-  form?: {
-    id: string;
-    title: string;
-    type: string;
-  };
-}
+export type { ResponseSession } from '../types';
 
 export const startSession = async (formId: string): Promise<ResponseSession> => {
   const res = await apiFetch('/responses/start', {
@@ -24,46 +16,61 @@ export const startSession = async (formId: string): Promise<ResponseSession> => 
   });
 
   if (!res.ok) {
-    const errorData = await res.json();
-    throw new Error(errorData.message || 'Error al iniciar la sesión');
+    throw new Error(await extractError(res, 'Error al iniciar la sesión'));
   }
 
   const data = await res.json();
   return data.data;
 };
 
-export const submitAnswer = async (sessionId: string, itemId: string, answer: any, timeSpentMs: number = 0): Promise<void> => {
+export const getSessionById = async (sessionId: string): Promise<ResponseSession> => {
+  const res = await apiFetch(`/responses/${sessionId}`);
+  if (!res.ok) {
+    throw new Error(await extractError(res, 'Error al obtener la sesión'));
+  }
+  const data = await res.json();
+  return data.data;
+};
+
+export const submitAnswer = async (
+  sessionId: string,
+  itemId: string,
+  answer: AnswerPayload,
+  timeSpentMs: number = 0,
+): Promise<void> => {
   const res = await apiFetch(`/responses/${sessionId}/answer`, {
     method: 'POST',
     body: JSON.stringify({ itemId, answer, timeSpentMs }),
   });
 
   if (!res.ok) {
-    throw new Error('Error al enviar la respuesta');
+    throw new Error(await extractError(res, 'Error al enviar la respuesta'));
   }
 };
 
-export const completeSession = async (sessionId: string): Promise<any> => {
+export const completeSession = async (sessionId: string): Promise<CompleteSessionResult> => {
   const res = await apiFetch(`/responses/${sessionId}/complete`, {
     method: 'POST',
   });
 
   if (!res.ok) {
-    throw new Error('Error al completar la sesión');
+    throw new Error(await extractError(res, 'Error al completar la sesión'));
   }
 
   const data = await res.json();
   return data.data;
 };
 
-export const getMySessions = async (params: { page?: number; limit?: number } = {}): Promise<any> => {
+export const getMySessions = async (
+  params: PaginationParams = {},
+): Promise<PaginatedResult<ResponseSession>> => {
   const queryParams = new URLSearchParams();
   if (params.page) queryParams.append('page', params.page.toString());
   if (params.limit) queryParams.append('limit', params.limit.toString());
 
   const res = await apiFetch(`/responses/my?${queryParams.toString()}`);
   if (!res.ok) {
-    throw new Error('Error al obtener mis sesiones');
+    throw new Error(await extractError(res, 'Error al obtener mis sesiones'));
   }
   const data = await res.json();
   return data.data;

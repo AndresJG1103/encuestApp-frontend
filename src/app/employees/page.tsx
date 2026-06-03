@@ -199,7 +199,7 @@ export default function EmployeesPage() {
             </table>
             
             {/* Pagination */}
-            {data && data.meta.lastPage > 1 && (
+            {data && data.meta.totalPages > 1 && (
               <div style={{ 
                 padding: '16px 24px', 
                 borderTop: '1px solid var(--color-outline-variant)', 
@@ -235,14 +235,14 @@ export default function EmployeesPage() {
                     <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>chevron_left</span>
                   </button>
                   
-                  {Array.from({ length: Math.min(5, data.meta.lastPage) }, (_, i) => {
+                  {Array.from({ length: Math.min(5, data.meta.totalPages) }, (_, i) => {
                     let pageNum;
-                    if (data.meta.lastPage <= 5) {
+                    if (data.meta.totalPages <= 5) {
                       pageNum = i + 1;
                     } else if (page <= 3) {
                       pageNum = i + 1;
-                    } else if (page >= data.meta.lastPage - 2) {
-                      pageNum = data.meta.lastPage - 4 + i;
+                    } else if (page >= data.meta.totalPages - 2) {
+                      pageNum = data.meta.totalPages - 4 + i;
                     } else {
                       pageNum = page - 2 + i;
                     }
@@ -267,23 +267,23 @@ export default function EmployeesPage() {
                   })}
 
                   <button 
-                    disabled={page === data.meta.lastPage}
+                    disabled={page === data.meta.totalPages}
                     onClick={() => setPage(p => p + 1)}
                     style={{ 
                       padding: '8px', borderRadius: '8px', border: '1px solid var(--color-outline-variant)',
-                      backgroundColor: 'var(--color-surface)', color: 'var(--color-on-surface)', cursor: page === data.meta.lastPage ? 'not-allowed' : 'pointer',
-                      opacity: page === data.meta.lastPage ? 0.5 : 1, display: 'flex', alignItems: 'center'
+                      backgroundColor: 'var(--color-surface)', color: 'var(--color-on-surface)', cursor: page === data.meta.totalPages ? 'not-allowed' : 'pointer',
+                      opacity: page === data.meta.totalPages ? 0.5 : 1, display: 'flex', alignItems: 'center'
                     }}
                   >
                     <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>chevron_right</span>
                   </button>
                   <button 
-                    disabled={page === data.meta.lastPage}
-                    onClick={() => setPage(data.meta.lastPage)}
+                    disabled={page === data.meta.totalPages}
+                    onClick={() => setPage(data.meta.totalPages)}
                     style={{ 
                       padding: '8px', borderRadius: '8px', border: '1px solid var(--color-outline-variant)',
-                      backgroundColor: 'var(--color-surface)', color: 'var(--color-on-surface)', cursor: page === data.meta.lastPage ? 'not-allowed' : 'pointer',
-                      opacity: page === data.meta.lastPage ? 0.5 : 1, display: 'flex', alignItems: 'center'
+                      backgroundColor: 'var(--color-surface)', color: 'var(--color-on-surface)', cursor: page === data.meta.totalPages ? 'not-allowed' : 'pointer',
+                      opacity: page === data.meta.totalPages ? 0.5 : 1, display: 'flex', alignItems: 'center'
                     }}
                   >
                     <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>last_page</span>

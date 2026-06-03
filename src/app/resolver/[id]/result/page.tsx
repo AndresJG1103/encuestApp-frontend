@@ -1,37 +1,36 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Sidebar } from '../../../../components/Sidebar';
-import { apiFetch } from '../../../../lib/api';
+import { useApi } from '../../../../hooks';
+import { getSessionById } from '../../../../services/responseService';
 
 export default function ResultPage() {
   const router = useRouter();
   const params = useParams();
   const sessionId = params.id as string;
 
-  const [session, setSession] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: session, loading, error } = useApi(
+    () => getSessionById(sessionId),
+    [sessionId],
+  );
 
-  useEffect(() => {
-    const fetchSession = async () => {
-      try {
-        const res = await apiFetch('/responses/my');
-        const data = await res.json();
-        const found = data.data.data.find((s: any) => s.id === sessionId);
-        setSession(found);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchSession();
-  }, [sessionId]);
+  if (loading) {
+    return (
+      <div style={{ padding: '40px', textAlign: 'center', color: 'var(--color-outline)' }}>
+        Cargando resultados...
+      </div>
+    );
+  }
 
-  if (loading) return <div style={{ padding: '40px', textAlign: 'center', color: 'var(--color-outline)' }}>Cargando resultados...</div>;
-
-  if (!session) return <div style={{ padding: '40px', textAlign: 'center' }}>Sesión no encontrada.</div>;
+  if (error || !session) {
+    return (
+      <div style={{ padding: '40px', textAlign: 'center' }}>
+        {error ?? 'Sesión no encontrada.'}
+      </div>
+    );
+  }
 
   const isTraining = session.form?.type === 'TRAINING';
   const passed = session.passed;
@@ -42,10 +41,10 @@ export default function ResultPage() {
 
       <main style={{ flex: 1, marginLeft: '280px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
         <div style={{ backgroundColor: 'var(--color-surface-container-lowest)', width: '100%', maxWidth: '600px', borderRadius: '32px', padding: '48px', textAlign: 'center', border: '1px solid var(--color-outline-variant)', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)' }}>
-          <div style={{ 
-            width: '80px', height: '80px', borderRadius: '9999px', 
-            backgroundColor: passed ? 'var(--color-secondary-container)' : 'var(--color-surface-variant)', 
-            color: passed ? 'var(--color-on-secondary-container)' : 'var(--color-on-surface-variant)', 
+          <div style={{
+            width: '80px', height: '80px', borderRadius: '9999px',
+            backgroundColor: passed ? 'var(--color-secondary-container)' : 'var(--color-surface-variant)',
+            color: passed ? 'var(--color-on-secondary-container)' : 'var(--color-on-surface-variant)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px'
           }}>
             <span className="material-symbols-outlined" style={{ fontSize: '48px' }}>
@@ -54,17 +53,17 @@ export default function ResultPage() {
           </div>
 
           <h1 style={{ fontSize: '32px', fontWeight: 800, margin: '0 0 12px 0', color: 'var(--color-on-surface)' }}>
-            {passed ? '¡Felicidades!' : '¡Formulario Enviado!'}
+            {passed ? '¡Felicidades!' : '¡Formulario enviado!'}
           </h1>
           <p style={{ fontSize: '18px', color: 'var(--color-on-surface-variant)', marginBottom: '40px', lineHeight: 1.5 }}>
             Has completado con éxito: <br/>
             <span style={{ fontWeight: 700, color: 'var(--color-primary)' }}>{session.form?.title}</span>
           </p>
 
-          {isTraining && (
+          {isTraining && session.score !== null && session.score !== undefined && (
             <div style={{ backgroundColor: 'var(--color-surface)', borderRadius: '20px', padding: '24px', marginBottom: '40px', border: '1px solid var(--color-outline-variant)' }}>
-              <p style={{ margin: '0 0 8px 0', fontSize: '14px', color: 'var(--color-outline)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>Tu Puntaje</p>
-              <h2 style={{ fontSize: '48px', margin: 0, color: passed ? '#10b981' : 'var(--color-on-surface)' }}>{session.score}%</h2>
+              <p style={{ margin: '0 0 8px 0', fontSize: '14px', color: 'var(--color-outline)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>Tu puntaje</p>
+              <h2 style={{ fontSize: '48px', margin: 0, color: passed ? '#10b981' : 'var(--color-on-surface)' }}>{Number(session.score).toFixed(1)}%</h2>
               <p style={{ margin: '8px 0 0 0', fontSize: '16px', fontWeight: 600, color: passed ? '#10b981' : 'var(--color-error)' }}>
                 {passed ? 'Has aprobado esta capacitación.' : 'No has alcanzado el puntaje mínimo.'}
               </p>
@@ -83,18 +82,18 @@ export default function ResultPage() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {passed && isTraining && (
-              <button 
+              <button
                 onClick={() => router.push('/certificates')}
                 style={{ width: '100%', padding: '16px', borderRadius: '16px', border: 'none', backgroundColor: 'var(--color-primary)', color: 'var(--color-on-primary)', fontWeight: 700, fontSize: '16px', cursor: 'pointer' }}
               >
-                Ver Mis Certificados
+                Ver mis certificados
               </button>
             )}
-            <button 
+            <button
               onClick={() => router.push('/my-tasks')}
               style={{ width: '100%', padding: '16px', borderRadius: '16px', border: '1px solid var(--color-outline-variant)', backgroundColor: 'transparent', color: 'var(--color-on-surface)', fontWeight: 600, fontSize: '16px', cursor: 'pointer' }}
             >
-              Volver a Mis Tareas
+              Volver a mis tareas
             </button>
           </div>
         </div>

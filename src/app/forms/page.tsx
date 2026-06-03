@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Sidebar } from '../../components/Sidebar';
-import { getForms, Form, publishForm, duplicateForm, deleteForm } from '../../services/formService';
+import { getForms, Form, publishForm, duplicateForm, deleteForm, archiveForm } from '../../services/formService';
 import { PaginatedResult } from '../../services/userService';
 import { useNotification } from '../../context/NotificationContext';
 
@@ -59,6 +59,18 @@ export default function FormsPage() {
     try {
       await deleteForm(id);
       notify('Formulario eliminado', 'success');
+      fetchForms();
+    } catch (err: any) {
+      notify(err.message, 'error');
+    }
+  };
+
+  const handleArchive = async (id: string) => {
+    const ok = await confirm('¿Archivar este formulario? Dejará de aceptar nuevas sesiones.');
+    if (!ok) return;
+    try {
+      await archiveForm(id);
+      notify('Formulario archivado', 'success');
       fetchForms();
     } catch (err: any) {
       notify(err.message, 'error');
@@ -170,13 +182,22 @@ export default function FormsPage() {
                             </button>
                           )}
                           {form.status === 'PUBLISHED' && (
-                            <button 
-                              onClick={() => router.push(`/forms/${form.id}/assign`)}
-                              title="Asignar"
-                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-tertiary)', padding: '4px' }}
-                            >
-                              <span className="material-symbols-outlined">assignment_ind</span>
-                            </button>
+                            <>
+                              <button
+                                onClick={() => router.push(`/forms/${form.id}/assign`)}
+                                title="Asignar"
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-tertiary)', padding: '4px' }}
+                              >
+                                <span className="material-symbols-outlined">assignment_ind</span>
+                              </button>
+                              <button
+                                onClick={() => handleArchive(form.id)}
+                                title="Archivar"
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-outline)', padding: '4px' }}
+                              >
+                                <span className="material-symbols-outlined">archive</span>
+                              </button>
+                            </>
                           )}
                           <button 
                             onClick={() => handleDuplicate(form.id)}

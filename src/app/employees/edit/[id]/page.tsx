@@ -2,205 +2,267 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Sidebar } from '../../../../components/Sidebar';
-import { getUserById, updateUser } from '../../../../services/userService';
+import { useAuth } from '../../../../context/AuthContext';
 import { useNotification } from '../../../../context/NotificationContext';
+import { Permissions } from '../../../../lib/permissions';
+import { useApi, useAsyncAction } from '../../../../hooks';
+import {
+  assignRole,
+  getUserById,
+  removeRole,
+  updateUser,
+} from '../../../../services/userService';
+import type { RoleType, UpdateUserInput } from '../../../../types';
+import {
+  Badge,
+  Button,
+  Card,
+  EmptyState,
+  Input,
+  PageLayout,
+  Select,
+  Spinner,
+} from '../../../../components/ui';
+
+const ALL_ROLES: RoleType[] = [
+  'SUPER_ADMIN',
+  'TENANT_ADMIN',
+  'CREATOR',
+  'REVIEWER',
+  'RESPONDENT',
+];
+
+const extractRoles = (user: any): RoleType[] => {
+  if (Array.isArray(user?.roles)) {
+    return user.roles.map((r: any) => (typeof r === 'string' ? r : r.role));
+  }
+  if (Array.isArray(user?.userTenants)) {
+    return user.userTenants.map((r: any) => r.role);
+  }
+  return [];
+};
 
 export default function EditEmployeePage() {
   const router = useRouter();
-  const { notify } = useNotification();
   const params = useParams();
+  const { user: authUser } = useAuth();
+  const { notify, confirm } = useNotification();
   const userId = params.id as string;
 
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { data: emp, loading, error, refetch } = useApi(
+    () => getUserById(userId),
+    [userId],
+  );
 
-  const [formData, setFormData] = useState({
+  const [form, setForm] = useState<UpdateUserInput>({
     firstName: '',
     lastName: '',
     identityDocument: '',
-    isActive: true
+    isActive: true,
   });
 
+  const [roleToAdd, setRoleToAdd] = useState<RoleType>('RESPONDENT');
+
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const user = await getUserById(userId);
-        setFormData({
-          firstName: user.firstName,
-          lastName: user.lastName,
-          identityDocument: user.identityDocument,
-          isActive: user.isActive
-        });
-      } catch (err: any) {
-        setError(err.message || 'Error al cargar los datos del usuario');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUser();
-  }, [userId]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
-    setFormData({
-      ...formData,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
-    });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    setError(null);
-
-    try {
-      await updateUser(userId, formData);
-      notify('Empleado actualizado con éxito', 'success');
-      router.push('/employees');
-    } catch (err: any) {
-      setError(err.message || 'Error al actualizar el empleado');
-      notify(err.message || 'Error al actualizar el empleado', 'error');
-    } finally {
-      setSaving(false);
+    if (emp) {
+      setForm({
+        firstName: emp.firstName,
+        lastName: emp.lastName,
+        identityDocument: emp.identityDocument,
+        isActive: emp.isActive,
+      });
     }
-  };
+  }, [emp]);
 
-  if (loading) {
+  const save = useAsyncAction(
+    (payload: UpdateUserInput) => updateUser(userId, payload),
+    {
+      onSuccess: () => {
+        notify('Empleado actualizado', 'success');
+        refetch();
+      },
+      onError: (msg) => notify(msg, 'error'),
+    },
+  );
+
+  const grantRole = useAsyncAction((r: RoleType) => assignRole(userId, r), {
+    onSuccess: () => {
+      notify('Rol asignado', 'success');
+      refetch();
+    },
+    onError: (msg) => notify(msg, 'error'),
+  });
+
+  const revokeRole = useAsyncAction((r: RoleType) => removeRole(userId, r), {
+    onSuccess: () => {
+      notify('Rol removido', 'success');
+      refetch();
+    },
+    onError: (msg) => notify(msg, 'error'),
+  });
+
+  if (!Permissions.manageUsers(authUser)) {
     return (
-      <div style={{ display: 'flex', minHeight: '100vh', width: '100%', backgroundColor: 'var(--color-background)' }}>
-        <Sidebar />
-        <main style={{ flex: 1, marginLeft: '280px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '48px', animation: 'spin 2s linear infinite', color: 'var(--color-primary)' }}>sync</span>
-            <p style={{ color: 'var(--color-outline)' }}>Cargando datos del empleado...</p>
-          </div>
-        </main>
-      </div>
+      <PageLayout title="Editar Empleado">
+        <EmptyState icon="lock" title="Acceso denegado" />
+      </PageLayout>
     );
   }
 
+  if (loading) {
+    return (
+      <PageLayout title="Editar Empleado">
+        <Spinner label="Cargando empleado..." />
+      </PageLayout>
+    );
+  }
+
+  if (error || !emp) {
+    return (
+      <PageLayout title="Editar Empleado">
+        <EmptyState icon="error" title="Error" description={error ?? 'No encontrado'} />
+      </PageLayout>
+    );
+  }
+
+  const currentRoles = extractRoles(emp);
+  const availableToAdd = ALL_ROLES.filter((r) => !currentRoles.includes(r));
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await save.run(form);
+  };
+
+  const handleRevoke = async (r: RoleType) => {
+    const ok = await confirm(`¿Remover el rol ${r}?`);
+    if (!ok) return;
+    await revokeRole.run(r);
+  };
+
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', width: '100%', backgroundColor: 'var(--color-background)' }}>
-      <Sidebar />
-
-      <main style={{ flex: 1, marginLeft: '280px', display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-        {/* Top Header */}
-        <header style={{ 
-          height: '72px', backgroundColor: 'var(--color-surface)', borderBottom: '1px solid var(--color-outline-variant)',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 32px',
-          position: 'sticky', top: 0, zIndex: 10
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <button 
-              onClick={() => router.back()}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-on-surface)', display: 'flex', alignItems: 'center' }}
-            >
-              <span className="material-symbols-outlined">arrow_back</span>
-            </button>
-            <h1 style={{ fontSize: '20px', fontWeight: 700, margin: 0, color: 'var(--color-on-surface)' }}>Editar Empleado</h1>
-          </div>
-        </header>
-
-        {/* Content */}
-        <div style={{ padding: '32px', display: 'flex', justifyContent: 'center' }}>
-          <div style={{ 
-            width: '100%', maxWidth: '600px', backgroundColor: 'var(--color-surface-container-lowest)', borderRadius: '16px',
-            border: '1px solid var(--color-outline-variant)', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
-          }}>
-            <div style={{ padding: '32px' }}>
-              <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '8px', color: 'var(--color-on-surface)' }}>Información del Usuario</h2>
-              <p style={{ color: 'var(--color-outline)', marginBottom: '32px' }}>Modifica los campos necesarios para actualizar el perfil.</p>
-
-              {error && (
-                <div style={{ 
-                  padding: '16px', backgroundColor: 'var(--color-error-container)', 
-                  color: 'var(--color-on-error-container)', borderRadius: '8px', marginBottom: '24px',
-                  display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px'
-                }}>
-                  <span className="material-symbols-outlined">error</span>
-                  {error}
-                </div>
-              )}
-
-              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-on-surface-variant)' }}>Nombre</label>
-                    <input 
-                      type="text" name="firstName" required value={formData.firstName} onChange={handleChange}
-                      style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--color-outline)', outline: 'none', backgroundColor: 'var(--color-surface)', color: 'var(--color-on-surface)' }}
-                    />
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-on-surface-variant)' }}>Apellidos</label>
-                    <input 
-                      type="text" name="lastName" required value={formData.lastName} onChange={handleChange}
-                      style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--color-outline)', outline: 'none', backgroundColor: 'var(--color-surface)', color: 'var(--color-on-surface)' }}
-                    />
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-on-surface-variant)' }}>Documento de Identidad</label>
-                  <input 
-                    type="text" name="identityDocument" required value={formData.identityDocument} onChange={handleChange}
-                    style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--color-outline)', outline: 'none', backgroundColor: 'var(--color-surface)', color: 'var(--color-on-surface)' }}
-                  />
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '8px' }}>
-                  <input 
-                    type="checkbox" name="isActive" id="isActive" checked={formData.isActive} onChange={handleChange}
-                    style={{ width: '20px', height: '20px', cursor: 'pointer' }}
-                  />
-                  <label htmlFor="isActive" style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-on-surface)', cursor: 'pointer' }}>
-                    Usuario Activo
-                  </label>
-                </div>
-
-                <div style={{ marginTop: '12px', display: 'flex', gap: '16px' }}>
-                  <button 
-                    type="button" 
-                    onClick={() => router.back()}
-                    style={{ 
-                      flex: 1, padding: '14px', borderRadius: '12px', border: '1px solid var(--color-outline)',
-                      backgroundColor: 'var(--color-surface-container-low)', color: 'var(--color-on-surface)', fontWeight: 600, cursor: 'pointer'
-                    }}
-                  >
-                    Cancelar
-                  </button>
-                  <button 
-                    type="submit" 
-                    disabled={saving}
-                    style={{ 
-                      flex: 1, padding: '14px', borderRadius: '12px', border: 'none',
-                      backgroundColor: 'var(--color-primary)', color: 'var(--color-on-primary)', fontWeight: 600, 
-                      cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
-                    }}
-                  >
-                    {saving ? (
-                      <>
-                        <span className="material-symbols-outlined" style={{ animation: 'spin 1s linear infinite' }}>sync</span>
-                        Guardando...
-                      </>
-                    ) : 'Guardar Cambios'}
-                  </button>
-                </div>
-              </form>
+    <PageLayout
+      title={`${emp.firstName} ${emp.lastName}`}
+      actions={
+        <Button variant="secondary" icon="arrow_back" onClick={() => router.push('/employees')}>
+          Volver
+        </Button>
+      }
+    >
+      <div className="max-w-2xl mx-auto flex flex-col gap-6">
+        {/* Datos */}
+        <Card>
+          <h3 className="text-base font-semibold m-0 mb-4">Información del usuario</h3>
+          <form onSubmit={handleSave} className="flex flex-col gap-5">
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                label="Nombre"
+                required
+                value={form.firstName ?? ''}
+                onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))}
+              />
+              <Input
+                label="Apellidos"
+                required
+                value={form.lastName ?? ''}
+                onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))}
+              />
             </div>
-          </div>
-        </div>
-      </main>
+            <Input
+              label="Documento de identidad"
+              required
+              value={form.identityDocument ?? ''}
+              onChange={(e) => setForm((f) => ({ ...f, identityDocument: e.target.value }))}
+            />
+            <label className="flex items-center gap-3 text-sm font-semibold text-on-surface cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.isActive ?? false}
+                onChange={(e) => setForm((f) => ({ ...f, isActive: e.target.checked }))}
+                className="w-5 h-5 cursor-pointer"
+              />
+              Usuario activo
+            </label>
 
-      <style jsx>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
-    </div>
+            {save.error && <p className="text-sm text-error m-0">{save.error}</p>}
+
+            <div className="flex justify-end gap-3">
+              <Button type="button" variant="secondary" onClick={() => router.back()}>
+                Cancelar
+              </Button>
+              <Button type="submit" loading={save.loading}>
+                Guardar cambios
+              </Button>
+            </div>
+          </form>
+        </Card>
+
+        {/* Roles */}
+        <Card>
+          <h3 className="text-base font-semibold m-0 mb-1">Roles asignados</h3>
+          <p className="text-sm text-on-surface-variant m-0 mb-4">
+            Un usuario puede tener múltiples roles dentro del tenant.
+          </p>
+
+          {currentRoles.length === 0 ? (
+            <p className="text-sm text-outline m-0 mb-4">Sin roles asignados.</p>
+          ) : (
+            <div className="flex flex-wrap gap-2 mb-4">
+              {currentRoles.map((r) => {
+                const isSelfSuperAdmin =
+                  r === 'SUPER_ADMIN' && authUser?.sub === userId;
+                return (
+                  <span
+                    key={r}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-primary-container text-on-primary-container"
+                  >
+                    {r}
+                    <button
+                      type="button"
+                      onClick={() => handleRevoke(r)}
+                      disabled={revokeRole.loading || isSelfSuperAdmin}
+                      title={
+                        isSelfSuperAdmin
+                          ? 'No puedes remover tu propio rol SUPER_ADMIN'
+                          : 'Remover rol'
+                      }
+                      className="ml-1 text-on-primary-container hover:text-error bg-transparent border-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      ×
+                    </button>
+                  </span>
+                );
+              })}
+            </div>
+          )}
+
+          {availableToAdd.length > 0 ? (
+            <div className="flex items-end gap-3">
+              <div className="flex-1">
+                <Select
+                  label="Asignar rol"
+                  value={roleToAdd}
+                  onChange={(e) => setRoleToAdd(e.target.value as RoleType)}
+                >
+                  {availableToAdd.map((r) => (
+                    <option key={r} value={r}>
+                      {r}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              <Button
+                icon="add"
+                onClick={() => grantRole.run(roleToAdd)}
+                loading={grantRole.loading}
+              >
+                Asignar
+              </Button>
+            </div>
+          ) : (
+            <p className="text-xs text-outline m-0">El usuario ya tiene todos los roles.</p>
+          )}
+        </Card>
+      </div>
+    </PageLayout>
   );
 }

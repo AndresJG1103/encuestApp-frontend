@@ -4,9 +4,9 @@ import React, { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Sidebar } from '../../../components/Sidebar';
 import { getFormById, Form } from '../../../services/formService';
-import { getSectionsByForm, Section, Item } from '../../../services/sectionService';
+import { Section, Item } from '../../../services/sectionService';
 import { getItemsBySection } from '../../../services/itemService';
-import { submitAnswer, completeSession } from '../../../services/responseService';
+import { getSessionById, submitAnswer, completeSession } from '../../../services/responseService';
 import { useNotification } from '../../../context/NotificationContext';
 
 export default function ResolverPage() {
@@ -28,39 +28,22 @@ export default function ResolverPage() {
   useEffect(() => {
     const initResolver = async () => {
       try {
-        // In a real app, we'd fetch the session first to get the formId.
-        // For this prototype, we'll assume the session is valid and we'll fetch sections.
-        // We'll need a way to get the formId from the session. 
-        // Let's assume we can get session details from an endpoint we'll need to verify.
-        
-        // Mocking fetching formId from session for now or assuming it's passed/retrievable.
-        // Actually, let's fetch my sessions to find this one.
-        const res = await fetch(`http://localhost:3000/api/v1/responses/my`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
-        });
-        const sessionData = await res.json();
-        const session = sessionData.data.data.find((s: any) => s.id === sessionId);
-        
-        if (!session) throw new Error('Sesión no encontrada');
+        const session = await getSessionById(sessionId);
+        const formData = await getFormById(session.formId);
 
-        const [formData, sectionsData] = await Promise.all([
-          getFormById(session.formId),
-          getSectionsByForm(session.formId)
-        ]);
-
+        const sectionsData: Section[] = (formData as any).sections ?? [];
         setForm(formData);
         setSections(sectionsData);
-        
-        // Calculate total questions across all sections
-        let totalQ = 0;
-        for (const section of sectionsData) {
-           const items = await getItemsBySection(section.id);
-           totalQ += items.filter(i => i.type === 'QUESTION').length;
-           if (section.id === sectionsData[0].id) {
-             setCurrentItems(items);
-           }
-        }
+
+        const totalQ = sectionsData.reduce(
+          (sum, s) => sum + (s.items?.filter(i => i.type === 'QUESTION').length ?? 0),
+          0,
+        );
         setTotalQuestions(totalQ);
+
+        const firstItems = sectionsData[0]?.items
+          ?? (sectionsData[0] ? await getItemsBySection(sectionsData[0].id) : []);
+        setCurrentItems(firstItems);
       } catch (err: any) {
         notify(err.message, 'error');
         router.push('/my-tasks');
@@ -108,7 +91,8 @@ export default function ResolverPage() {
 
       if (currentSectionIndex < sections.length - 1) {
         const nextIndex = currentSectionIndex + 1;
-        const nextItems = await getItemsBySection(sections[nextIndex].id);
+        const nextSection = sections[nextIndex];
+        const nextItems = nextSection.items ?? await getItemsBySection(nextSection.id);
         setCurrentItems(nextItems);
         setCurrentSectionIndex(nextIndex);
         window.scrollTo(0, 0);
